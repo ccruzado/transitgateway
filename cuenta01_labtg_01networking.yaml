@@ -1,0 +1,470 @@
+Parameters:
+
+  VpcCIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para este VPC
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.0.0/16
+
+  Aplicacion:
+    Description: Nombre de Aplicacion
+    Type: String
+
+  PublicSubnet1CIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para la public subnet en la primera AZ
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.0.0/24
+
+  PublicSubnet2CIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para la public subnet en la segunda AZ
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.1.0/24
+
+  PrivateSubnet1CIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para la private subnet en la primera AZ
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.2.0/24
+
+  PrivateSubnet2CIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para la private subnet en la segunda AZ
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.3.0/24
+
+  DatabaseSubnet1CIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para la data base subnet en la primera AZ
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.4.0/24
+
+  DatabaseSubnet2CIDR:
+    Description: Por favor, ingresar el rango de IP (CIDR) para la data base subnet en la segunda AZ
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    Default: 10.0.5.0/24
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub VPC-${Aplicacion}
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub IG-${Aplicacion}
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: SN PUB 01
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: SN PUB 02
+
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: SN PRI 01
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: SN PRI 02
+
+  DatabaseSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref DatabaseSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: SN DB 01
+
+  DatabaseSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: !Ref DatabaseSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: SN DB 02
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: EIP NATGW
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: NATGW
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: RT PUB
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: RT PRI
+
+  DefaultPrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  DatabaseRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: RT DB 01
+
+  DefaultDatabaseRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref DatabaseRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  Database1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DatabaseRouteTable
+      SubnetId: !Ref DatabaseSubnet1
+
+  Database2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DatabaseRouteTable
+      SubnetId: !Ref DatabaseSubnet2
+
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: db-sngroup
+      DBSubnetGroupDescription: "DB Subnet Group"
+      SubnetIds:
+        - !Ref DatabaseSubnet1
+        - !Ref DatabaseSubnet2
+      Tags:
+        - Key: Name
+          Value: db-sngroup
+
+  SecurityGroup22pub:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.22.pub"
+      GroupDescription: "sgr.22.pub"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: sgr.22.pub
+
+  SecurityGroup80pub:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.80.pub"
+      GroupDescription: "sgr.80.pub"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: sgr.80.pub
+
+  SecurityGroup443pub:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.443.pub"
+      GroupDescription: "sgr.443.pub"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: sgr.443.pub
+
+  SecurityGroup22pri:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.22.pri"
+      GroupDescription: "sgr.22.pri"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: sgr.22.pri
+          
+  SecurityGroup80pri:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.80.pri"
+      GroupDescription: "sgr.80.pri"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: sgr.80.pri
+
+  SecurityGroup443pri:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.443.pri"
+      GroupDescription: "sgr.443.pri"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: sgr.443.pri
+
+  SecurityGroup3306pri:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.3306.pri"
+      GroupDescription: "sgr.3306.pri"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: sgr.3306.pri
+
+  SecurityGroupPingPri:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "sgr.ping.pri"
+      GroupDescription: "sgr.ping.pri"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 10.0.0.0/8
+      Tags:
+        - Key: Name
+          Value: sgr.ping.pri
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Configuracion de Networking"
+        Parameters:
+          - Aplicacion
+          - VpcCIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+          - DatabaseSubnet1CIDR
+          - DatabaseSubnet2CIDR
+
+Outputs:
+  VPC:
+    Description: VPC
+    Value: !Ref VPC
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-vpc"
+
+  SNPUB01:
+    Description: SN PUB 01
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-snpub01"
+
+  SNPRI01:
+    Description: SN PRI 01
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-snpri01"
+        
+  SecurityGroup22pub:
+    Description: Security Group 22 publico
+    Value: !Ref SecurityGroup22pub
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr22pub"
+
+  SecurityGroup80pub:
+    Description: Security Group 80 publico
+    Value: !Ref SecurityGroup80pub
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr80pub"
+
+  SecurityGroup443pub:
+    Description: Security Group 443 publico
+    Value: !Ref SecurityGroup443pub
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr443pub"
+
+  SecurityGroup22pri:
+    Description: Security Group 22 privado
+    Value: !Ref SecurityGroup22pri
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr22pri"
+
+  SecurityGroup80pri:
+    Description: Security Group 80 privado
+    Value: !Ref SecurityGroup80pri
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr80pri"
+
+  SecurityGroup443pri:
+    Description: Security Group 443 privado
+    Value: !Ref SecurityGroup443pri
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr443pri"
+
+  SecurityGroup3306pri:
+    Description: Security Group 3306 privado
+    Value: !Ref SecurityGroup3306pri
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgr3306pri"
+
+  SecurityGroupPingPri:
+    Description: Security Group ping privado
+    Value: !Ref SecurityGroupPingPri
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-sgrpingpri"
+
+  DatabaseSubnetGroup:
+    Description: Database Subnet Group
+    Value: !Ref DatabaseSubnetGroup
+    Export:
+      Name: 
+        Fn::Sub: "${AWS::StackName}-dbsngroup"

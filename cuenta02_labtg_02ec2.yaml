@@ -1,0 +1,77 @@
+Parameters:
+
+  NetworkStackName:
+    Description: Stack Netowrking
+    Type: String
+    Default: lab-networking
+  
+  AMI:
+    Description: AMI de instancia EC2
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+  InstanceType:
+    Description: Tipo de instancia EC2
+    Type: String
+    Default: t2.micro
+  
+  KeyName:
+    Description: Key pair para instancia EC2
+    Type: AWS::EC2::KeyPair::KeyName
+ 
+
+
+Resources:
+
+  EC2Pub: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: true
+          PrivateIpAddress: 10.1.0.10  
+          DeviceIndex: "0"
+          GroupSet: 
+            - Fn::ImportValue:
+                Fn::Sub: "${NetworkStackName}-sgr22pub"      
+          SubnetId: 
+            Fn::ImportValue:
+              Fn::Sub: "${NetworkStackName}-snpub01"   
+      Tags:
+        - Key: Name
+          Value: EC2 Publica
+  
+  EC2Pri: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: false
+          PrivateIpAddress: 10.1.2.10        
+          DeviceIndex: "0"
+          GroupSet: 
+            - Fn::ImportValue:
+                Fn::Sub: "${NetworkStackName}-sgr22pri"
+            - Fn::ImportValue:
+                Fn::Sub: "${NetworkStackName}-sgrpingpri"        
+          SubnetId:
+            Fn::ImportValue:
+              Fn::Sub: "${NetworkStackName}-snpri01"   
+      Tags:
+        - Key: Name
+          Value: EC2 Privada
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Configuracion de Instancia EC2"
+        Parameters:
+          - NetworkStackName
+          - AMI
+          - InstanceType
+          - KeyName
